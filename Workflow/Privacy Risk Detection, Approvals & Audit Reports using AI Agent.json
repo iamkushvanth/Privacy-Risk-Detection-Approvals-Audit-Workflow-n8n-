@@ -1,0 +1,877 @@
+{
+  "name": "Privacy Risk Detection, Approvals & Audit Reports using AI Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "id": "9ff05711-5515-48ac-803c-02a2cd979a4a",
+      "name": "Scheduled Compliance Audit",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Privacy Governance Agent for Kaufman Rossin.\n\nA url has been received:\n{{ $json.URLS }}\n\nYour task is to evaluate the company associated with the provided URL for potential privacy and data protection compliance risks.\n\nIMPORTANT:\n- You do NOT have access to external tools, APIs, or live browsing.\n- Base your assessment on general knowledge of typical business models, industry practices, and publicly known regulatory requirements.\n\nInstructions:\n1. Analyze the URL and infer the type of business (e.g., streaming service, e-commerce, SaaS, etc.).\n2. Based on that, identify likely personal data processing activities (e.g., user accounts, payments, tracking, profiling, third-party sharing).\n3. Evaluate compliance risks under:\n   - GDPR (EU)\n   - CCPA (California)\n   - PDPA (Singapore/Asia variants)\n\n4. Consider key principles such as:\n   - Lawfulness, fairness, and transparency\n   - Consent management\n   - Data minimization and purpose limitation\n   - Data subject rights (access, deletion, portability)\n   - Profiling and automated decision-making\n   - Cross-border data transfers\n   - Data security and breach notification\n\n5. Assign a risk level:\n   - critical\n   - high\n   - medium\n   - low\n\n6. Provide a concise justification and recommended actions.\n\nOutput format (STRICT):\n\nURL: <url_here>  \nriskLevel: <level>  \nriskSummary: <summary>\nregulatoryFramework : [\"GDPR\", \"CCPA\", \"PDPA\"],\nrecommendedAction: []\n",
+        "options": {
+          "systemMessage": "You are a compliance-focused AI agent for Kaufman Rossin CPA & Advisory. Your role is to evaluate data usage events against current privacy regulations and produce structured compliance assessments."
+        }
+      },
+      "id": "7bad1ecd-520d-4f5b-9e66-50c4f53d3df0",
+      "name": "Privacy Governance Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        864,
+        96
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Risk Detection Agent for Kaufman Rossin.\n\nBased on the privacy governance assessment below, perform a detailed risk detection analysis:\n\nURL: {{ $json.url }}\nRisk Level: {{ $json.riskLevel }}\nRisk Summary: {{ $json.riskSummary }}\nRegulatory Framework: {{ $json.regulatoryFramework }}\nRecommended Action: {{ $json.recommendedAction }}\n\nIMPORTANT:\n- You do NOT have access to external tools, APIs, or live browsing.\n- Base your analysis only on the provided input and general regulatory knowledge (GDPR, CCPA, PDPA).\n- Return ONLY the JSON object below. No explanation, no markdown, no extra text.\n\nInstructions:\n1. Identify and list specific compliance violations or risk indicators.\n2. Flag high-priority risks (e.g., profiling without consent, lack of transparency, cross-border transfers, missing user rights handling).\n3. Determine an urgency level: critical | high | medium | low\n4. Create a concise audit log entry summarizing findings.\n5. Provide clear recommended actions.\n6. Assign a routing decision: critical | high | standard\n\nOutput (STRICT JSON only):\n{\n  \"url\": \"{{ $json.url }}\",\n  \"riskLevel\": \"{{ $json.riskLevel }}\",\n  \"riskSummary\": \"{{ $json.riskSummary }}\",\n  \"regulatoryFramework\": \"{{ $json.regulatoryFramework }}\",\n  \"recommendedAction\": \"{{ $json.recommendedAction }}\",\n  \"detectedRisks\": [\"risk 1\", \"risk 2\", \"risk 3\"],\n  \"urgencyLevel\": \"high\",\n  \"auditLogEntry\": \"Brief summary of findings.\",\n  \"recommendedActions\": [\"action 1\", \"action 2\"],\n  \"routingDecision\": \"high\"\n}",
+        "options": {
+          "systemMessage": "You are a risk detection specialist AI for Kaufman Rossin. Identify specific regulatory violations, assign severity scores, and produce audit-ready documentation."
+        }
+      },
+      "id": "11e35b42-04ab-4e1e-bd6d-3f4b7463c07e",
+      "name": "Risk Detection Agent Tool",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        1472,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "kushvanthsura@gmail.com",
+        "subject": "=Privacy Risk Alert - {{ $json.riskLevel}} | {{ $json.url }}",
+        "emailType": "text",
+        "message": "=Dear Compliance Team,\n\nA privacy governance risk assessment has been completed for the following entity. Please review the findings below.\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nASSESSMENT OVERVIEW\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\nURL:                 {{ $json.url }}\nRisk Level:          {{ $json.riskLevel }}\nUrgency Level:       {{ $json.urgencyLevel }}\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nRISK SUMMARY\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n{{ $json.riskSummary }}\n\n\n\nThis is an automated alert generated by the Kaufman Rossin Privacy Risk Detection System.\nPlease do not reply directly to this email.\nFor queries, contact the Privacy Governance Team.\n\n\nKaufman Rossin | Privacy Risk Detection Team",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2720,
+        0
+      ],
+      "id": "365e232d-d459-4f69-8219-90fb0342cd7f",
+      "name": "Send a message",
+      "webhookId": "90baf6a4-299d-4455-8956-6e96ac26d75c",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bNUzXDIA1lcchrOX",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "kushvanthsura@gmail.com",
+        "subject": "=Privacy Risk Alert - {{ $json.riskLevel }} | {{ $json.url }}",
+        "emailType": "text",
+        "message": "=Dear Compliance Team,\n\nA privacy governance risk assessment has been completed for the following entity. Please review the findings below.\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nASSESSMENT OVERVIEW\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\nURL:                 {{ $json.url }}\nRisk Level:          {{ $json.riskLevel }}\nUrgency Level:       {{ $json.urgencyLevel }}\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nRISK SUMMARY\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n{{ $json.riskSummary }}\n\n\nThis is an automated alert generated by the Kaufman Rossin Privacy Risk Detection System.\nPlease do not reply directly to this email.\nFor queries, contact the Privacy Governance Team.\n\n\nKaufman Rossin | Privacy Risk Detection Team",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2720,
+        256
+      ],
+      "id": "495607aa-994d-446d-96c5-d138564538fb",
+      "name": "Send a message1",
+      "webhookId": "d42cec4b-f938-46d1-8028-be4c000e64c0",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bNUzXDIA1lcchrOX",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "includeOtherFields": true,
+        "include": "selected",
+        "includeFields": "url, riskLevel, riskSummary, urgencyLevel",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2496,
+        0
+      ],
+      "id": "d435a8e7-6120-4a70-86e5-36701910ff50",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.riskLevel }}",
+                    "rightValue": "medium",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "7eb50c29-9bf1-434a-9576-fca7eb15c9b1"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "RiskMedium"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "e1d4b542-c038-4b44-bd7b-8b30d3b18717",
+                    "leftValue": "={{ $json.riskLevel }}",
+                    "rightValue": "high",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "RiskHigh"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "039919d9-cc2a-4b37-8423-4ef84ccd7ae0",
+                    "leftValue": "={{ $json.riskLevel }}",
+                    "rightValue": "normal",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "RiskNormal"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        2272,
+        80
+      ],
+      "id": "12ba22f4-6843-4abe-8b08-de646832b24a",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "includeOtherFields": true,
+        "include": "selected",
+        "includeFields": "url, riskLevel, urgencyLevel, riskSummary",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2496,
+        256
+      ],
+      "id": "03e3745c-ed64-4472-83ed-d9ca9968c052",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-safeguard-20b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        896,
+        336
+      ],
+      "id": "e9648703-8fa4-4f8a-bb63-6725d29027f8",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "0hrlmw3tdi9bPuAo",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-safeguard-20b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1552,
+        320
+      ],
+      "id": "2fd13b7e-eae0-40ff-92a4-d13ce0e5fb8a",
+      "name": "Groq Chat Model3",
+      "credentials": {
+        "groqApi": {
+          "id": "0hrlmw3tdi9bPuAo",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        672,
+        400
+      ],
+      "id": "3fe2f2ab-61de-4a8a-94c7-5f316510ea01",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "amount": 3
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3168,
+        320
+      ],
+      "id": "fb8d2c3a-ca0a-4b85-8120-896259f8d609",
+      "name": "Wait1",
+      "webhookId": "6ad87602-155f-4f96-b490-6f679a3dbf58"
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code Node (JavaScript)\n// Parse Privacy Governance Agent plain-text output into structured rows\n\nfunction extractField(text, fieldName) {\n  // Matches \"fieldName: value\" until the next \\n or end\n  const regex = new RegExp(`${fieldName}\\\\s*:\\\\s*(.+?)(?=\\\\n[a-zA-Z]|$)`, \"s\");\n  const match = text.match(regex);\n  return match ? match[1].trim() : \"\";\n}\n\nfunction extractArray(text, fieldName) {\n  // Matches fieldName : [\"a\", \"b\"] or fieldName: [\\n \"a\",\\n \"b\"\\n]\n  const regex = new RegExp(`${fieldName}\\\\s*:\\\\s*(\\\\[[\\\\s\\\\S]*?\\\\])`, \"i\");\n  const match = text.match(regex);\n  if (!match) return \"\";\n  try {\n    const parsed = JSON.parse(match[1]);\n    return Array.isArray(parsed) ? parsed.join(\" | \") : match[1];\n  } catch {\n    return match[1].replace(/[\\[\\]\"]/g, \"\").trim();\n  }\n}\n\nfunction extractActionList(text) {\n  // Extracts the recommendedAction array and returns as numbered string\n  const regex = /recommendedAction\\s*:\\s*\\[([\\s\\S]*?)\\]/i;\n  const match = text.match(regex);\n  if (!match) return \"\";\n  try {\n    const parsed = JSON.parse(`[${match[1]}]`);\n    return parsed.map((a, i) => `${i + 1}. ${a}`).join(\"\\n\");\n  } catch {\n    // Fallback: strip quotes and clean up\n    return match[1]\n      .split(/\",\\s*\\n\\s*\"/)\n      .map(s => s.replace(/^\"|\"$/g, \"\").trim())\n      .filter(Boolean)\n      .map((a, i) => `${i + 1}. ${a}`)\n      .join(\"\\n\");\n  }\n}\n\nreturn items.flatMap(item => {\n  // Your output lives in item.json.output as a plain string\n  const raw =\n    item.json.output ||\n    (item.json.message && (item.json.message.content ?? item.json.message)) ||\n    item.json.content ||\n    \"\";\n\n  if (!raw || typeof raw !== \"string\") return [];\n\n  // Normalize \\n literals to real newlines if needed\n  const text = raw.replace(/\\\\n/g, \"\\n\");\n\n  return [{\n    json: {\n      url:                extractField(text, \"URL\"),\n      riskLevel:          extractField(text, \"riskLevel\"),\n      riskSummary:        extractField(text, \"riskSummary\"),\n      regulatoryFramework: extractArray(text, \"regulatoryFramework\"),\n      recommendedAction:  extractActionList(text)\n    }\n  }];\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1248,
+        96
+      ],
+      "id": "950df0c7-e627-4488-891f-fc8a8a29ab72",
+      "name": "Code in JavaScript",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code Node (JavaScript)\n// Parse Risk Detection Agent JSON output into structured rows\n\nfunction stripCodeFences(s) {\n  if (!s) return \"\";\n  return s\n    .replace(/```json/gi, \"\")\n    .replace(/```/g, \"\")\n    .trim();\n}\n\nfunction tryParseJsonBlock(s) {\n  if (!s) return null;\n  const trimmed = s.trim();\n  if (!(trimmed.startsWith(\"{\") || trimmed.startsWith(\"[\"))) return null;\n  try {\n    return JSON.parse(trimmed);\n  } catch (e) {\n    const arrMatch = s.match(/\\[[\\s\\S]*\\]/);\n    if (arrMatch) {\n      try { return JSON.parse(arrMatch[0]); } catch(e2) {}\n    }\n    const start = s.indexOf(\"{\");\n    const end = s.lastIndexOf(\"}\");\n    if (start !== -1 && end !== -1 && end > start) {\n      try { return JSON.parse(s.slice(start, end + 1)); } catch(e3) {}\n    }\n    return null;\n  }\n}\n\nfunction arrToStr(val) {\n  if (Array.isArray(val)) return val.join(\" | \");\n  if (typeof val === \"string\") return val;\n  return \"\";\n}\n\nreturn items.flatMap(function(item) {\n  var raw =\n    item.json.output ||\n    (item.json.message && (item.json.message.content || item.json.message)) ||\n    item.json.content ||\n    \"\";\n\n  if (!raw || typeof raw !== \"string\") return [];\n\n  var cleaned = stripCodeFences(raw);\n  var parsed = tryParseJsonBlock(cleaned);\n  if (!parsed) return [];\n\n  return [{\n    json: {\n      url:                 parsed.url                 || \"\",\n      riskLevel:           parsed.riskLevel           || \"\",\n      riskSummary:         parsed.riskSummary         || \"\",\n      regulatoryFramework: parsed.regulatoryFramework || \"\",\n      recommendedAction:   arrToStr(parsed.recommendedAction),\n      detectedRisks:       arrToStr(parsed.detectedRisks),\n      urgencyLevel:        parsed.urgencyLevel        || \"\",\n      auditLogEntry:       parsed.auditLogEntry       || \"\",\n      recommendedActions:  arrToStr(parsed.recommendedActions),\n      routingDecision:     parsed.routingDecision     || \"\"\n    }\n  }];\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1824,
+        96
+      ],
+      "id": "8378c138-891d-4c37-8f80-3c8b79ef697c",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "sendTo": "kushvanthsura@gmail.com",
+        "subject": "Privacy Risk Assessment Completed & Findings Updated",
+        "emailType": "text",
+        "message": "Hi Team,\n\nThe privacy governance and risk detection assessment has been successfully completed for the companies listed in the URL sheet.\n\nAs part of this process:\n\n* Each company URL was evaluated for potential data protection and privacy compliance risks.\n* Assessments were conducted in alignment with GDPR, CCPA, and PDPA regulatory frameworks.\n* Risk levels, summaries, and recommended actions were identified.\n* A detailed risk detection analysis was performed, including identified compliance gaps, urgency levels, and routing decisions.\n\nAll findings have been updated in the Google Sheet for your review.\n\nPlease find the attached document containing the detailed assessment results for the companies listed in the URL sheet.\n\nhttps://docs.google.com/spreadsheets/d/1DqgCKuKzKUpelUp6OpD0LWP3Pe_JJEZkEAMS-95bgRk/edit?usp=sharing\n\nLet me know if you would like a walkthrough of the findings or any further analysis.\n\nBest regards,\nKushvanth\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        928,
+        720
+      ],
+      "id": "d99827e5-be9a-46ba-981a-11f2248398f3",
+      "name": "Send a message2",
+      "webhookId": "b06a5891-e316-46aa-9fa5-96f8d5cef2f1",
+      "executeOnce": true,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bNUzXDIA1lcchrOX",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Privacy Governance Agent Using  AI Groq API\n\n**Evaluates company URLs to infer data processing activities and assess compliance risks under GDPR, CCPA, and PDPA, producing structured risk summaries and recommended actions.**",
+        "height": 672,
+        "width": 992,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        176,
+        -96
+      ],
+      "id": "89d156fb-749b-4810-866a-78c85f94261d",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Risk-Based Notification & Logging\n\n**Evaluates processed risk data and routes records based on severity. High and medium risk entries trigger immediate email notifications to stakeholders, while all results are logged for audit and tracking purposes.**\n\n**Sends immediate notifications for records classified as high or medium risk, ensuring timely awareness and response from the compliance team.**\n",
+        "height": 848,
+        "width": 1120
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2224,
+        -160
+      ],
+      "id": "b77bd010-b4bd-4d9a-9b07-9252dcc76af0",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Risk Detection Agent\n\n**Analyzes governance outputs to identify specific compliance violations, assign urgency levels, generate audit-ready logs, and recommend actionable remediation steps for risk mitigation.**",
+        "height": 672,
+        "width": 928
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1216,
+        -96
+      ],
+      "id": "c3642eee-15a9-47bc-88e0-9989488dadf8",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1DqgCKuKzKUpelUp6OpD0LWP3Pe_JJEZkEAMS-95bgRk/edit?usp=sharinghttps://docs.google.com/spreadsheets/d/1DqgCKuKzKUpelUp6OpD0LWP3Pe_JJEZkEAMS-95bgRk/edit?usp=sharing",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 377934223,
+          "mode": "list",
+          "cachedResultName": "MailID",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1DqgCKuKzKUpelUp6OpD0LWP3Pe_JJEZkEAMS-95bgRk/edit#gid=377934223"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "threadId",
+              "displayName": "threadId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "labelIds",
+              "displayName": "labelIds",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "26f71723-2fee-4ed9-a89d-a06cb04c3a9c",
+      "name": "Store Gmail ID",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        2944,
+        96
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "iS79wYk5iOkzvuaG",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1DqgCKuKzKUpelUp6OpD0LWP3Pe_JJEZkEAMS-95bgRk",
+          "mode": "list",
+          "cachedResultName": "n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1DqgCKuKzKUpelUp6OpD0LWP3Pe_JJEZkEAMS-95bgRk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Complaince Record",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1DqgCKuKzKUpelUp6OpD0LWP3Pe_JJEZkEAMS-95bgRk/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "text"
+          ],
+          "schema": [
+            {
+              "id": "url",
+              "displayName": "url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "riskLevel",
+              "displayName": "riskLevel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "riskSummary",
+              "displayName": "riskSummary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "regulatoryFramework",
+              "displayName": "regulatoryFramework",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "recommendedAction",
+              "displayName": "recommendedAction",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "detectedRisks",
+              "displayName": "detectedRisks",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "urgencyLevel",
+              "displayName": "urgencyLevel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "auditLogEntry",
+              "displayName": "auditLogEntry",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "recommendedActions",
+              "displayName": "recommendedActions",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "routingDecision",
+              "displayName": "routingDecision",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2048,
+        96
+      ],
+      "id": "5e8a8cbb-413d-48a6-977b-9113d6377f33",
+      "name": "Store Complaince Record",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "iS79wYk5iOkzvuaG",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1DqgCKuKzKUpelUp6OpD0LWP3Pe_JJEZkEAMS-95bgRk",
+          "mode": "list",
+          "cachedResultName": "n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1DqgCKuKzKUpelUp6OpD0LWP3Pe_JJEZkEAMS-95bgRk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1953359050,
+          "mode": "list",
+          "cachedResultName": "Company URL",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1DqgCKuKzKUpelUp6OpD0LWP3Pe_JJEZkEAMS-95bgRk/edit#gid=1953359050"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        448,
+        400
+      ],
+      "id": "bc10f494-9687-4b61-96ce-e233b1ad79e8",
+      "name": "Company URL",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "iS79wYk5iOkzvuaG",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Final Audit Summary Notification\n\n**Sends a comprehensive email report after completion of the full audit cycle for all company URLs, summarizing key findings, risk levels, and compliance insights for stakeholder review.**",
+        "height": 256,
+        "width": 576
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        688,
+        624
+      ],
+      "id": "5a82fd86-9945-4e0c-874e-ef702beb90a1",
+      "name": "Sticky Note3"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Scheduled Compliance Audit": {
+      "main": [
+        [
+          {
+            "node": "Company URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Privacy Governance Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Risk Detection Agent Tool": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Store Gmail ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message1": {
+      "main": [
+        [
+          {
+            "node": "Store Gmail ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Privacy Governance Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Risk Detection Agent Tool",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Send a message2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Privacy Governance Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Risk Detection Agent Tool",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Store Complaince Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Gmail ID": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Complaince Record": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Company URL": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "fcdff360-ac00-4432-90ea-0bef2ff2a993",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "868729e460938b9585e5970de5c5221003860865e8c365f89bfee277e7c12e94"
+  },
+  "id": "m0T7LoYsoRHCzxxV",
+  "tags": []
+}
